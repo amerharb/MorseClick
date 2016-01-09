@@ -15,7 +15,7 @@ int spaceLong = unitLong  * 7;
 int freq = 450;
 
 //pin of the buzzer that will beep the morse code
-int buzzerPin = 9;
+int buzzerPin = 12;
 int ledPin = 13;
 
 //morseMode
@@ -42,9 +42,9 @@ void loop() {
     // check for some of the special keys
     if (c == PS2_ENTER) {
       Serial.println();
-      if (mode = 1) {
+      if (mode == 1) {
         morseChar(' ');
-      } else if (mode = 2) {
+      } else if (mode == 2) {
         for (int i = 0; i < stmt.length(); i++) {
           morseChar(stmt.charAt(i));
         }
@@ -72,9 +72,9 @@ void loop() {
     } else if (c == PS2_DELETE) {
       Serial.print("[Del]");
     } else {
-      if (mode = 1) {
+      if (mode == 1) {
         morseChar(c);
-      } else if (mode = 2) {
+      } else if (mode == 2) {
         stmt += c;
       }
     }
@@ -329,21 +329,31 @@ void morseZ() {
   moresAfterLetter();
 }
 
-void morseOO() {
-  //morse --..
+void morseOO() { //Ö
+  //morse ---.
   morseDash();
   morseDash();
-  morseDot();
+  morseDash();
   morseDot();
   moresAfterLetter();
 }
 
-void morseAA() {
-  //morse --..
+void morseAA() { //Ä
+  //morse .-.-
+  morseDot();
+  morseDash();
+  morseDot();
+  morseDash();
+  moresAfterLetter();
+}
+
+void morseAAA() { //Å
+  //morse .--.-
+  morseDot();
   morseDash();
   morseDash();
   morseDot();
-  morseDot();
+  morseDash();
   moresAfterLetter();
 }
 
@@ -527,6 +537,15 @@ void morseChar(char c) {
   } else if (c == 'z' || c == 'Z') {
     Serial.print("Z");
     morseZ();
+  } else if (c == ';' || c == ':') {
+    Serial.print("Ö");
+    morseOO();
+  } else if (c == '\'' || c == '"') {
+    Serial.print("Ä");
+    morseAA();
+  } else if (c == '[' || c == '{') {
+    Serial.print("Å");
+    morseAAA();
   } else if (c == '1') {
     Serial.print("1");
     morse1();
@@ -560,6 +579,8 @@ void morseChar(char c) {
   } else if (c == ' ') {
     Serial.print(" ");
     morseSpace();
+  } else {
+    Serial.print(c);
   }
 }
 
