@@ -18,6 +18,10 @@ int freq = 450;
 int buzzerPin = 9;
 int ledPin = 13;
 
+//morseMode
+int mode = 1; // 1. morse directly each click 2. morse words after the Enter
+String stmt = "";
+
 void setup() {
   delay(1000);
   keyboard.begin(DataPin, IRQpin);
@@ -38,126 +42,25 @@ void loop() {
     // check for some of the special keys
     if (c == PS2_ENTER) {
       Serial.println();
-    } else if (c == 'a' || c == 'A') {
-      Serial.print("A");
-      morseA();
-    } else if (c == 'b' || c == 'B') {
-      Serial.print("B");
-      morseB();
-    } else if (c == 'c' || c == 'C') {
-      Serial.print("C");
-      morseC();
-    } else if (c == 'd' || c == 'D') {
-      Serial.print("D");
-      morseD();
-    } else if (c == 'e' || c == 'E') {
-      Serial.print("E");
-      morseE();
-    } else if (c == 'f' || c == 'F') {
-      Serial.print("F");
-      morseF();
-    } else if (c == 'g' || c == 'G') {
-      Serial.print("G");
-      morseG();
-    } else if (c == 'h' || c == 'H') {
-      Serial.print("H");
-      morseH();
-    } else if (c == 'i' || c == 'I') {
-      Serial.print("I");
-      morseI();
-    } else if (c == 'j' || c == 'J') {
-      Serial.print("J");
-      morseJ();
-    } else if (c == 'k' || c == 'K') {
-      Serial.print("K");
-      morseK();
-    } else if (c == 'l' || c == 'L') {
-      Serial.print("L");
-      morseL();
-    } else if (c == 'm' || c == 'M') {
-      Serial.print("M");
-      morseM();
-    } else if (c == 'n' || c == 'N') {
-      Serial.print("N");
-      morseN();
-    } else if (c == 'o' || c == 'O') {
-      Serial.print("O");
-      morseO();
-    } else if (c == 'p' || c == 'P') {
-      Serial.print("P");
-      morseP();
-    } else if (c == 'q' || c == 'Q') {
-      Serial.print("Q");
-      morseQ();
-    } else if (c == 'r' || c == 'R') {
-      Serial.print("R");
-      morseR();
-    } else if (c == 's' || c == 'S') {
-      Serial.print("S");
-      morseS();
-    } else if (c == 't' || c == 'T') {
-      Serial.print("T");
-      morseT();
-    } else if (c == 'u' || c == 'U') {
-      Serial.print("U");
-      morseU();
-    } else if (c == 'v' || c == 'V') {
-      Serial.print("V");
-      morseV();
-    } else if (c == 'w' || c == 'W') {
-      Serial.print("W");
-      morseW();
-    } else if (c == 'x' || c == 'X') {
-      Serial.print("X");
-      morseX();
-    } else if (c == 'y' || c == 'Y') {
-      Serial.print("Y");
-      morseY();
-    } else if (c == 'z' || c == 'Z') {
-      Serial.print("Z");
-      morseZ();
-    } else if (c == '1') {
-      Serial.print("1");
-      morse1();
-    } else if (c == '2') {
-      Serial.print("2");
-      morse2();
-    } else if (c == '3') {
-      Serial.print("3");
-      morse3();
-    } else if (c == '4') {
-      Serial.print("4");
-      morse4();
-    } else if (c == '5') {
-      Serial.print("5");
-      morse5();
-    } else if (c == '6') {
-      Serial.print("6");
-      morse6();
-    } else if (c == '7') {
-      Serial.print("7");
-      morse7();
-    } else if (c == '8') {
-      Serial.print("8");
-      morse8();
-    } else if (c == '9') {
-      Serial.print("9");
-      morse9();
-    } else if (c == '0') {
-      Serial.print("0");
-      morse0();
-    } else if (c == ' ') {
-      Serial.print(" ");
-      morseSpace();
-
+      if (mode = 1) {
+        morseChar(' ');
+      } else if (mode = 2) {
+        for (int i = 0; i < stmt.length(); i++) {
+          morseChar(stmt.charAt(i));
+        }
+        stmt = "";
+      }
     } else if (c == PS2_TAB) {
       Serial.print("[Tab]");
     } else if (c == PS2_ESC) {
       Serial.print("[ESC]");
     } else if (c == PS2_PAGEDOWN) {
-      Serial.print("[PgDn]");
+      Serial.println("mode = 2, morse stmt at Enter");
+      mode = 2;
+      stmt = "";
     } else if (c == PS2_PAGEUP) {
-      Serial.print("[PgUp]");
+      Serial.println("mode = 1 directly morse");
+      mode = 1;
     } else if (c == PS2_LEFTARROW) {
       Serial.print("[Left]");
     } else if (c == PS2_RIGHTARROW) {
@@ -169,9 +72,11 @@ void loop() {
     } else if (c == PS2_DELETE) {
       Serial.print("[Del]");
     } else {
-
-      // otherwise, just print all normal characters
-      Serial.print(c);
+      if (mode = 1) {
+        morseChar(c);
+      } else if (mode = 2) {
+        stmt += c;
+      }
     }
   }
 }
@@ -424,7 +329,7 @@ void morseZ() {
   moresAfterLetter();
 }
 
-void morseÖ() {
+void morseOO() {
   //morse --..
   morseDash();
   morseDash();
@@ -433,7 +338,7 @@ void morseÖ() {
   moresAfterLetter();
 }
 
-void morseÄ() {
+void morseAA() {
   //morse --..
   morseDash();
   morseDash();
@@ -542,4 +447,119 @@ void morse0() {
   moresAfterLetter();
 }
 
+void morseChar(char c) {
+
+  if (c == 'a' || c == 'A') {
+    Serial.print("A");
+    morseA();
+  } else if (c == 'b' || c == 'B') {
+    Serial.print("B");
+    morseB();
+  } else if (c == 'c' || c == 'C') {
+    Serial.print("C");
+    morseC();
+  } else if (c == 'd' || c == 'D') {
+    Serial.print("D");
+    morseD();
+  } else if (c == 'e' || c == 'E') {
+    Serial.print("E");
+    morseE();
+  } else if (c == 'f' || c == 'F') {
+    Serial.print("F");
+    morseF();
+  } else if (c == 'g' || c == 'G') {
+    Serial.print("G");
+    morseG();
+  } else if (c == 'h' || c == 'H') {
+    Serial.print("H");
+    morseH();
+  } else if (c == 'i' || c == 'I') {
+    Serial.print("I");
+    morseI();
+  } else if (c == 'j' || c == 'J') {
+    Serial.print("J");
+    morseJ();
+  } else if (c == 'k' || c == 'K') {
+    Serial.print("K");
+    morseK();
+  } else if (c == 'l' || c == 'L') {
+    Serial.print("L");
+    morseL();
+  } else if (c == 'm' || c == 'M') {
+    Serial.print("M");
+    morseM();
+  } else if (c == 'n' || c == 'N') {
+    Serial.print("N");
+    morseN();
+  } else if (c == 'o' || c == 'O') {
+    Serial.print("O");
+    morseO();
+  } else if (c == 'p' || c == 'P') {
+    Serial.print("P");
+    morseP();
+  } else if (c == 'q' || c == 'Q') {
+    Serial.print("Q");
+    morseQ();
+  } else if (c == 'r' || c == 'R') {
+    Serial.print("R");
+    morseR();
+  } else if (c == 's' || c == 'S') {
+    Serial.print("S");
+    morseS();
+  } else if (c == 't' || c == 'T') {
+    Serial.print("T");
+    morseT();
+  } else if (c == 'u' || c == 'U') {
+    Serial.print("U");
+    morseU();
+  } else if (c == 'v' || c == 'V') {
+    Serial.print("V");
+    morseV();
+  } else if (c == 'w' || c == 'W') {
+    Serial.print("W");
+    morseW();
+  } else if (c == 'x' || c == 'X') {
+    Serial.print("X");
+    morseX();
+  } else if (c == 'y' || c == 'Y') {
+    Serial.print("Y");
+    morseY();
+  } else if (c == 'z' || c == 'Z') {
+    Serial.print("Z");
+    morseZ();
+  } else if (c == '1') {
+    Serial.print("1");
+    morse1();
+  } else if (c == '2') {
+    Serial.print("2");
+    morse2();
+  } else if (c == '3') {
+    Serial.print("3");
+    morse3();
+  } else if (c == '4') {
+    Serial.print("4");
+    morse4();
+  } else if (c == '5') {
+    Serial.print("5");
+    morse5();
+  } else if (c == '6') {
+    Serial.print("6");
+    morse6();
+  } else if (c == '7') {
+    Serial.print("7");
+    morse7();
+  } else if (c == '8') {
+    Serial.print("8");
+    morse8();
+  } else if (c == '9') {
+    Serial.print("9");
+    morse9();
+  } else if (c == '0') {
+    Serial.print("0");
+    morse0();
+  } else if (c == ' ') {
+    Serial.print(" ");
+    morseSpace();
+  }
+}
 
