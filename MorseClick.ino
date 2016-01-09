@@ -1,13 +1,15 @@
 
 #include <PS2Keyboard.h>
+#include <LiquidCrystal.h>
 
 const int DataPin = 4;
 const int IRQpin =  3;
 
 PS2Keyboard keyboard;
+LiquidCrystal lcd(10, 11, 6, 7, 8, 9);
 
 //this will determine the pase of morse code and fequancy
-int unitLong = 55;
+int unitLong = 57;
 int dotLong = unitLong;
 int dashLong = unitLong * 3;
 int afterLetterLong = unitLong * 3;
@@ -15,7 +17,7 @@ int spaceLong = unitLong  * 7;
 int freq = 450;
 
 //pin of the buzzer that will beep the morse code
-int buzzerPin = 12;
+int buzzerPin = 5;
 int ledPin = 13;
 
 //morseMode
@@ -24,6 +26,13 @@ String stmt = "";
 
 void setup() {
   delay(1000);
+  //set number of columns and ros
+  lcd.begin(16, 2);
+  lcd.noCursor();
+  lcd.noAutoscroll();
+  lcd.setCursor(2, 0);
+  lcd.print("Morse  Click");
+
   keyboard.begin(DataPin, IRQpin);
   Serial.begin(9600);
   Serial.println("Keyboard Test:");
@@ -58,9 +67,13 @@ void loop() {
       Serial.println("mode = 2, morse stmt at Enter");
       mode = 2;
       stmt = "";
+      lcd.clear();
+      lcd.print("Morse on Enter");
     } else if (c == PS2_PAGEUP) {
       Serial.println("mode = 1 directly morse");
       mode = 1;
+      lcd.clear();
+      lcd.print("Morse on Click");
     } else if (c == PS2_LEFTARROW) {
       Serial.print("[Left]");
     } else if (c == PS2_RIGHTARROW) {
@@ -108,6 +121,7 @@ void morseDash() {
 void moresAfterLetter() {
   digitalWrite(ledPin, LOW);
   delay(afterLetterLong - unitLong);
+
 }
 
 void morseSpace() {
@@ -119,13 +133,18 @@ void morseSpace() {
 
 void morseA() {
   //morse .-
+  displayMorse("A", "._");
+
   morseDot();
   morseDash();
   moresAfterLetter();
+
 }
 
 void morseB() {
   //morse -...
+  displayMorse("B", "_...");
+
   morseDash();
   morseDot();
   morseDot();
@@ -135,6 +154,8 @@ void morseB() {
 
 void morseC() {
   //morse -.-.
+  displayMorse("C", "_._.");
+
   morseDash();
   morseDot();
   morseDash();
@@ -144,6 +165,8 @@ void morseC() {
 
 void morseD() {
   //morse --.
+  displayMorse("D", "__.");
+
   morseDash();
   morseDash();
   morseDot();
@@ -152,12 +175,16 @@ void morseD() {
 
 void morseE() {
   //morse .
+  displayMorse("E", ".");
+
   morseDot();
   moresAfterLetter();
 }
 
 void morseF() {
   //morse ..-.
+  displayMorse("F", ".._.");
+
   morseDot();
   morseDot();
   morseDash();
@@ -167,6 +194,8 @@ void morseF() {
 
 void morseG() {
   //morse --.
+  displayMorse("G", "__.");
+
   morseDash();
   morseDash();
   morseDot();
@@ -175,6 +204,8 @@ void morseG() {
 
 void morseH() {
   //morse ....
+  displayMorse("H", "....");
+
   morseDot();
   morseDot();
   morseDot();
@@ -184,6 +215,8 @@ void morseH() {
 
 void morseI() {
   //morse ..
+  displayMorse("I", "..");
+
   morseDot();
   morseDot();
   moresAfterLetter();
@@ -191,6 +224,8 @@ void morseI() {
 
 void morseJ() {
   //morse .---
+  displayMorse("J", ".___");
+
   morseDot();
   morseDash();
   morseDash();
@@ -200,6 +235,8 @@ void morseJ() {
 
 void morseK() {
   //morse -.-
+  displayMorse("K", "_._");
+
   morseDash();
   morseDot();
   morseDash();
@@ -208,6 +245,8 @@ void morseK() {
 
 void morseL() {
   //morse .-..
+  displayMorse("L", "._..");
+
   morseDot();
   morseDash();
   morseDot();
@@ -217,6 +256,8 @@ void morseL() {
 
 void morseM() {
   //morse --
+  displayMorse("M", "__");
+
   morseDash();
   morseDash();
   moresAfterLetter();
@@ -224,6 +265,8 @@ void morseM() {
 
 void morseN() {
   //morse -.
+  displayMorse("N", "_.");
+
   morseDash();
   morseDot();
   moresAfterLetter();
@@ -231,6 +274,8 @@ void morseN() {
 
 void morseO() {
   //morse ---
+  displayMorse("O", "___");
+
   morseDash();
   morseDash();
   morseDash();
@@ -239,6 +284,8 @@ void morseO() {
 
 void morseP() {
   //morse .--.
+  displayMorse("P", ".__.");
+
   morseDot();
   morseDash();
   morseDash();
@@ -248,6 +295,8 @@ void morseP() {
 
 void morseQ() {
   //morse --.-
+  displayMorse("Q", "__._");
+
   morseDash();
   morseDash();
   morseDot();
@@ -257,6 +306,8 @@ void morseQ() {
 
 void morseR() {
   //morse .-.
+  displayMorse("R", "._.");
+
   morseDot();
   morseDash();
   morseDot();
@@ -265,6 +316,8 @@ void morseR() {
 
 void morseS() {
   //morse ...
+  displayMorse("S", "...");
+
   morseDot();
   morseDot();
   morseDot();
@@ -273,12 +326,16 @@ void morseS() {
 
 void morseT() {
   //morse -
+  displayMorse("T", "_");
+
   morseDash();
   moresAfterLetter();
 }
 
 void morseU() {
   //morse ..-
+  displayMorse("U", ".._");
+
   morseDot();
   morseDot();
   morseDash();
@@ -287,6 +344,8 @@ void morseU() {
 
 void morseV() {
   //morse ...-
+  displayMorse("V", "..._");
+
   morseDot();
   morseDot();
   morseDot();
@@ -296,6 +355,8 @@ void morseV() {
 
 void morseW() {
   //morse .--
+  displayMorse("W", ".__");
+
   morseDot();
   morseDash();
   morseDash();
@@ -304,6 +365,8 @@ void morseW() {
 
 void morseX() {
   //morse -..-
+  displayMorse("X", "_.._");
+
   morseDash();
   morseDot();
   morseDot();
@@ -313,6 +376,8 @@ void morseX() {
 
 void morseY() {
   //morse -.--
+  displayMorse("Y", "_.__");
+
   morseDash();
   morseDot();
   morseDash();
@@ -322,6 +387,8 @@ void morseY() {
 
 void morseZ() {
   //morse --..
+  displayMorse("Z", "__..");
+
   morseDash();
   morseDash();
   morseDot();
@@ -331,6 +398,8 @@ void morseZ() {
 
 void morseOO() { //Ö
   //morse ---.
+  displayMorse("Ö", "___.");
+
   morseDash();
   morseDash();
   morseDash();
@@ -340,6 +409,8 @@ void morseOO() { //Ö
 
 void morseAA() { //Ä
   //morse .-.-
+  displayMorse("Ä", "._._");
+
   morseDot();
   morseDash();
   morseDot();
@@ -349,6 +420,8 @@ void morseAA() { //Ä
 
 void morseAAA() { //Å
   //morse .--.-
+  displayMorse("Å", ".__._");
+
   morseDot();
   morseDash();
   morseDash();
@@ -359,6 +432,8 @@ void morseAAA() { //Å
 
 void morse1() {
   //morse .----
+  displayMorse("1", ".____");
+
   morseDot();
   morseDash();
   morseDash();
@@ -369,6 +444,8 @@ void morse1() {
 
 void morse2() {
   //morse ..---
+  displayMorse("2", "..___");
+
   morseDot();
   morseDot();
   morseDash();
@@ -379,6 +456,8 @@ void morse2() {
 
 void morse3() {
   //morse ...--
+  displayMorse("3", "...__");
+
   morseDot();
   morseDot();
   morseDot();
@@ -389,6 +468,8 @@ void morse3() {
 
 void morse4() {
   //morse ....-
+  displayMorse("4", "...._");
+
   morseDot();
   morseDot();
   morseDot();
@@ -399,6 +480,8 @@ void morse4() {
 
 void morse5() {
   //morse .....
+  displayMorse("5", ".....");
+
   morseDot();
   morseDot();
   morseDot();
@@ -409,6 +492,8 @@ void morse5() {
 
 void morse6() {
   //morse -....
+  displayMorse("6", "_....");
+
   morseDash();
   morseDot();
   morseDot();
@@ -419,6 +504,8 @@ void morse6() {
 
 void morse7() {
   //morse --...
+  displayMorse("7", "__...");
+
   morseDash();
   morseDash();
   morseDot();
@@ -429,6 +516,8 @@ void morse7() {
 
 void morse8() {
   //morse ---..
+  displayMorse("8", "___..");
+
   morseDash();
   morseDash();
   morseDash();
@@ -439,6 +528,8 @@ void morse8() {
 
 void morse9() {
   //morse ----.
+  displayMorse("9", "____.");
+
   morseDash();
   morseDash();
   morseDash();
@@ -449,6 +540,8 @@ void morse9() {
 
 void morse0() {
   //morse -----
+  displayMorse("0", "_____");
+
   morseDash();
   morseDash();
   morseDash();
@@ -582,5 +675,16 @@ void morseChar(char c) {
   } else {
     Serial.print(c);
   }
+}
+
+void displayMorse(String letter, String morse) {
+  lcd.clear();
+  lcd.noCursor();
+  lcd.noAutoscroll();
+  lcd.setCursor(7, 0);
+  lcd.print(letter);
+  lcd.setCursor(7 - (morse.length() / 2), 1);
+  lcd.print(morse);
+  
 }
 
