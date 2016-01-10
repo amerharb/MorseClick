@@ -9,7 +9,7 @@ PS2Keyboard keyboard;
 LiquidCrystal lcd(10, 11, 6, 7, 8, 9);
 
 //this will determine the pase of morse code and fequancy
-int unitLong = 57;
+int unitLong = 50;
 int dotLong = unitLong;
 int dashLong = unitLong * 3;
 int afterLetterLong = unitLong * 3;
@@ -20,18 +20,62 @@ int freq = 450;
 int buzzerPin = 5;
 int ledPin = 13;
 
+int interPin = 2;
+unsigned long interPress;
+boolean sosMode = false;
+
 //morseMode
 int mode = 1; // 1. morse directly each click 2. morse words after the Enter
 String stmt = "";
+String lastStmt = "";
+int curCharMorse = 0;
 
 void setup() {
   delay(1000);
+
+  pinMode(interPin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(interPin), stopMorsing, FALLING);
+
   //set number of columns and ros
   lcd.begin(16, 2);
   lcd.noCursor();
   lcd.noAutoscroll();
   lcd.setCursor(2, 0);
   lcd.print("Morse  Click");
+
+  byte AA[8] = { //Ä
+    B10001,
+    B00000,
+    B00000,
+    B01110,
+    B10001,
+    B11111,
+    B10001,
+  };
+
+  byte AAA[8] = { //Å
+    B00100,
+    B01010,
+    B00100,
+    B01110,
+    B10001,
+    B11111,
+    B10001,
+  };
+
+  byte OO[8] = { //Ö
+    B10001,
+    B00000,
+    B01110,
+    B10001,
+    B10001,
+    B10001,
+    B01110,
+  };
+
+  lcd.createChar(0, AA); //Ä
+  lcd.createChar(1, AAA); //Å
+  lcd.createChar(2, OO); //Ö
 
   keyboard.begin(DataPin, IRQpin);
   Serial.begin(9600);
@@ -43,53 +87,181 @@ void setup() {
 }
 
 void loop() {
-  if (keyboard.available()) {
 
-    // read the next key
-    char c = keyboard.read();
+  unsigned long interHold = 0;
 
-    // check for some of the special keys
-    if (c == PS2_ENTER) {
-      Serial.println();
-      if (mode == 1) {
-        morseChar(' ');
-      } else if (mode == 2) {
-        for (int i = 0; i < stmt.length(); i++) {
-          morseChar(stmt.charAt(i));
+  if (digitalRead(interPin)) {
+    interPress = millis() ;
+    while (digitalRead(interPin) && interHold <= 5000) {
+      interHold = (millis() - interPress);
+      delay(10);
+    }
+
+    if (interHold > 5000) {
+      Serial.println("SOS");
+      lcd.clear();
+      lcd.setCursor(6, 0);
+      lcd.print("SOS");
+
+      sosMode = true;
+      while (sosMode) {
+        morseS();
+        morseO();
+        morseS();
+        morseSpace();
+        morseSpace();
+      }
+      lcd.clear();
+      lcd.noCursor();
+      lcd.noBlink();
+    }
+  } else {
+    interHold = 0;
+    if (keyboard.available()) {
+
+      // read the next key
+      char c = keyboard.read();
+      Serial.print(int(c));
+      // check for some of the special keys
+      if (c == PS2_ENTER) {
+        Serial.println();
+        if (mode == 1) {
+          morseChar(' ');
+        } else if (mode == 2) {
+          lcd.home();
+          lcd.noAutoscroll();
+          lcd.blink();
+          if (stmt == "") { // morse last statment
+            lcd.setCursor(0, 0);
+            lcd.print(lastStmt);
+            for (int i = 0; i < lastStmt.length(); i++) {
+              curCharMorse = i;
+              morseChar(lastStmt.charAt(i));
+            }
+          } else {
+            for (int i = 0; i < stmt.length(); i++) {
+              curCharMorse = i;
+              morseChar(stmt.charAt(i));
+            }
+            lastStmt = stmt;
+            stmt = "";
+          }
+          lcd.noBlink();
+          lcd.cursor();
         }
+      } else if (c == PS2_TAB) {
+        Serial.print("[Tab]");
+      } else if (c == PS2_ESC) {
+        Serial.print("[ESC]");
+      } else if (c == PS2_PAGEDOWN) {
+        Serial.println("mode = 2, morse stmt at Enter");
+        mode = 2;
         stmt = "";
+        lcd.clear();
+        lcd.home();
+        lcd.print("Morse on Enter");
+        lcd.noCursor();
+        lcd.noBlink();
+      } else if (c == PS2_PAGEUP) {
+        Serial.println("mode = 1 directly morse");
+        mode = 1;
+        lcd.noCursor();
+        lcd.noBlink();
+        lcd.noAutoscroll();
+        lcd.clear();
+        lcd.home();
+        lcd.print("Morse on Click");
+      } else if (c == PS2_LEFTARROW) {
+        Serial.print("[Left]");
+        if (freq > 100) {
+          freq -= 10;
+          lcd.clear();
+          lcd.print("Freq = " + String(freq));
+        }
+      } else if (c == PS2_RIGHTARROW) {
+        Serial.print("[Right]");
+        if (freq < 1000) {
+          freq += 10;
+          lcd.clear();
+          lcd.print("Freq = " + String(freq));
+        }
+      } else if (c  == PS2_UPARROW) {
+        Serial.print("[Up]");
+        if (unitLong < 100) {
+          unitLong++;
+          updateTimes();
+          lcd.clear();
+          lcd.print("Phase = " + String(unitLong));
+        }
+      } else if (c == PS2_DOWNARROW) {
+        Serial.print("[Down]");
+        if (unitLong > 10) {
+          unitLong--;
+          updateTimes();
+          lcd.clear();
+          lcd.print("Phase = " + String(unitLong));
+        }
+      } else if (c == PS2_DELETE) {
+        Serial.print("[Del]");
+        if (mode == 2) {
+          stmt = "";
+          lastStmt = "";
+          lcd.clear();
+          lcd.cursor();
+        }
+      } else {
+        if (mode == 1) {
+          morseChar(c);
+        } else if (mode == 2) {
+          lcd.cursor();
+          if (stmt.length() == 0) {
+            lcd.clear();
+            lcd.home();
+            lcd.noAutoscroll();
+          } else if (stmt.length() <= 15) {
+            lcd.noAutoscroll();
+          } else if (stmt.length() > 15) {
+            lcd.autoscroll();
+          }
+          stmt += c;
+          //lcd.clear();
+          //lcd.home();
+          //lcd.print(stmt);
+          if (c == ';' || c == ':') {
+            lcd.write(byte(2));
+          } else if (c == '\'' || c == '"') {
+            lcd.write(byte(0));
+          } else if (c == '[' || c == '{') {
+            lcd.write(byte(1));
+          } else {
+            lcd.print(c);
+
+          }
+        }
       }
-    } else if (c == PS2_TAB) {
-      Serial.print("[Tab]");
-    } else if (c == PS2_ESC) {
-      Serial.print("[ESC]");
-    } else if (c == PS2_PAGEDOWN) {
-      Serial.println("mode = 2, morse stmt at Enter");
-      mode = 2;
-      stmt = "";
-      lcd.clear();
-      lcd.print("Morse on Enter");
-    } else if (c == PS2_PAGEUP) {
-      Serial.println("mode = 1 directly morse");
-      mode = 1;
-      lcd.clear();
-      lcd.print("Morse on Click");
-    } else if (c == PS2_LEFTARROW) {
-      Serial.print("[Left]");
-    } else if (c == PS2_RIGHTARROW) {
-      Serial.print("[Right]");
-    } else if (c == PS2_UPARROW) {
-      Serial.print("[Up]");
-    } else if (c == PS2_DOWNARROW) {
-      Serial.print("[Down]");
-    } else if (c == PS2_DELETE) {
-      Serial.print("[Del]");
+    }
+  }
+}
+
+boolean firstStopAfterSOS = true;
+void stopMorsing() {
+  Serial.println(" STOP ");
+  if (sosMode) {
+    if (firstStopAfterSOS ) {
+      firstStopAfterSOS  = false;
     } else {
-      if (mode == 1) {
-        morseChar(c);
-      } else if (mode == 2) {
-        stmt += c;
-      }
+      sosMode = false;
+      firstStopAfterSOS = true ;
+      
+    }
+  } else {
+    stmt = "";
+    lastStmt = "";
+    lcd.clear();
+    lcd.setCursor(5, 0);
+    lcd.print("STOP");
+    while (keyboard.available()) {
+      keyboard.read();
     }
   }
 }
@@ -678,13 +850,35 @@ void morseChar(char c) {
 }
 
 void displayMorse(String letter, String morse) {
-  lcd.clear();
-  lcd.noCursor();
-  lcd.noAutoscroll();
-  lcd.setCursor(7, 0);
-  lcd.print(letter);
-  lcd.setCursor(7 - (morse.length() / 2), 1);
-  lcd.print(morse);
-  
+  //clear 2nd line
+  for (int i = 0; i < 16; i++) {
+    lcd.setCursor(i, 1);
+    lcd.write(' ');
+  }
+  lcd.setCursor(0, 1);
+  if (letter == "Ä") {
+    lcd.write(byte(0));
+    lcd.setCursor(1, 1);
+    lcd.print("  " + morse);
+  } else if (letter == "Å") {
+    lcd.write(byte(1));
+    lcd.setCursor(1, 1);
+    lcd.print("  " + morse);
+  } else if (letter == "Ö") {
+    lcd.write(byte(2));
+    lcd.setCursor(1, 1);
+    lcd.print("  " + morse);
+  } else {
+    lcd.print(letter + "  " + morse);
+  }
+  //return back the blinking cursor
+  lcd.setCursor(curCharMorse, 0);
+}
+
+void updateTimes() {
+  dotLong = unitLong;
+  dashLong = unitLong * 3;
+  afterLetterLong = unitLong * 3;
+  spaceLong = unitLong  * 7;
 }
 
